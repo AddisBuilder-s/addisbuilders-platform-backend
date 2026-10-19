@@ -1,5 +1,5 @@
 CREATE TABLE users (
-                       id INT AUTO_INCREMENT PRIMARY KEY,
+                       id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        full_name VARCHAR(150) NOT NULL,
                        email VARCHAR(255) NOT NULL UNIQUE,
                        password_hash VARCHAR(255) NOT NULL,
@@ -11,26 +11,28 @@ CREATE TABLE users (
 );
 
 CREATE TABLE organizations (
-                               id INT AUTO_INCREMENT PRIMARY KEY,
-                               user_id INT NOT NULL UNIQUE,
+                               id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                               user_id BIGINT NOT NULL UNIQUE,
                                name VARCHAR(200) NOT NULL,
                                description TEXT,
                                website VARCHAR(255),
                                verification_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
                                logo_url VARCHAR(500),
+                               created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                               updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE course_categories (
-                                   id INT AUTO_INCREMENT PRIMARY KEY,
+                                   id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                    name VARCHAR(100) NOT NULL UNIQUE,
                                    description TEXT
 );
 
 CREATE TABLE courses (
-                         id INT AUTO_INCREMENT PRIMARY KEY,
-                         mentor_id INT NOT NULL,
-                         category_id INT,
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         mentor_id BIGINT NOT NULL,
+                         category_id BIGINT,
                          title VARCHAR(200) NOT NULL,
                          description TEXT,
                          level VARCHAR(50) NOT NULL,
@@ -43,8 +45,8 @@ CREATE TABLE courses (
 );
 
 CREATE TABLE modules (
-                         id INT AUTO_INCREMENT PRIMARY KEY,
-                         course_id INT NOT NULL,
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         course_id BIGINT NOT NULL,
                          title VARCHAR(200) NOT NULL,
                          module_order INT NOT NULL,
                          UNIQUE KEY idx_course_module_order (course_id, module_order),
@@ -52,8 +54,8 @@ CREATE TABLE modules (
 );
 
 CREATE TABLE lessons (
-                         id INT AUTO_INCREMENT PRIMARY KEY,
-                         module_id INT NOT NULL,
+                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         module_id BIGINT NOT NULL,
                          title VARCHAR(200) NOT NULL,
                          type VARCHAR(50) NOT NULL,
                          body TEXT,
@@ -64,8 +66,8 @@ CREATE TABLE lessons (
 );
 
 CREATE TABLE assignments (
-                             id INT AUTO_INCREMENT PRIMARY KEY,
-                             course_id INT NOT NULL,
+                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                             course_id BIGINT NOT NULL,
                              title VARCHAR(200) NOT NULL,
                              instructions TEXT,
                              due_at TIMESTAMP,
@@ -74,9 +76,9 @@ CREATE TABLE assignments (
 );
 
 CREATE TABLE submissions (
-                             id INT AUTO_INCREMENT PRIMARY KEY,
-                             assignment_id INT NOT NULL,
-                             learner_id INT NOT NULL,
+                             id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                             assignment_id BIGINT NOT NULL,
+                             learner_id BIGINT NOT NULL,
                              text_answer TEXT,
                              file_url VARCHAR(1000),
                              status VARCHAR(50) NOT NULL DEFAULT 'SUBMITTED',
@@ -90,9 +92,9 @@ CREATE TABLE submissions (
 );
 
 CREATE TABLE student_progress (
-                                  id INT AUTO_INCREMENT PRIMARY KEY,
-                                  student_id INT NOT NULL,
-                                  lesson_id INT NOT NULL,
+                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                  student_id BIGINT NOT NULL,
+                                  lesson_id BIGINT NOT NULL,
                                   is_completed BOOLEAN NOT NULL DEFAULT FALSE,
                                   completed_at TIMESTAMP,
                                   UNIQUE KEY idx_student_lesson (student_id, lesson_id),
@@ -101,9 +103,9 @@ CREATE TABLE student_progress (
 );
 
 CREATE TABLE internship_listings (
-                                     id INT AUTO_INCREMENT PRIMARY KEY,
-                                     organization_id INT NOT NULL,
-                                     coordinator_id INT,
+                                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                     organization_id BIGINT NOT NULL,
+                                     coordinator_id BIGINT,
                                      title VARCHAR(200) NOT NULL,
                                      description TEXT NOT NULL,
                                      requirements TEXT,
@@ -116,9 +118,9 @@ CREATE TABLE internship_listings (
 );
 
 CREATE TABLE internship_applications (
-                                         id INT AUTO_INCREMENT PRIMARY KEY,
-                                         internship_id INT NOT NULL,
-                                         learner_id INT NOT NULL,
+                                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                         internship_id BIGINT NOT NULL,
+                                         learner_id BIGINT NOT NULL,
                                          cover_letter TEXT,
                                          resume_url VARCHAR(1000),
                                          status VARCHAR(50) NOT NULL DEFAULT 'SUBMITTED',
