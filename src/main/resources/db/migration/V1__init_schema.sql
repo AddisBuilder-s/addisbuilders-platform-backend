@@ -91,16 +91,17 @@ CREATE TABLE submissions (
                              FOREIGN KEY (learner_id) REFERENCES users(id)
 );
 
-CREATE TABLE student_progress (
-                                  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                  student_id BIGINT NOT NULL,
-                                  lesson_id BIGINT NOT NULL,
-                                  is_completed BOOLEAN NOT NULL DEFAULT FALSE,
-                                  completed_at TIMESTAMP,
-                                  UNIQUE KEY idx_student_lesson (student_id, lesson_id),
-                                  FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-                                  FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE
-);
+-- V2__add_student_progress.sql
+CREATE TABLE IF NOT EXISTS student_progress (
+                                                id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                                student_id BIGINT NOT NULL,
+                                                lesson_id BIGINT NOT NULL,
+                                                completed BOOLEAN NOT NULL DEFAULT TRUE,
+                                                completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                CONSTRAINT fk_student_progress_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_student_progress_lesson FOREIGN KEY (lesson_id) REFERENCES lessons(id) ON DELETE CASCADE,
+    CONSTRAINT uk_student_lesson UNIQUE (student_id, lesson_id)
+    );
 
 CREATE TABLE internship_listings (
                                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
