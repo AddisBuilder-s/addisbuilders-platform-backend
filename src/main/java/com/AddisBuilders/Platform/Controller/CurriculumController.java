@@ -24,7 +24,7 @@ public class CurriculumController {
 
     @PostMapping("/{courseId}/modules")
     @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
-    public ResponseEntity<ModuleResponse> addModule(
+    public ResponseEntity<ModuleResponses> addModule(
             @PathVariable Long courseId,
             @Valid @RequestBody CreateModuleRequest request,
             @AuthenticationPrincipal User currentUser
@@ -43,7 +43,7 @@ public class CurriculumController {
     }
 
     @GetMapping("/{courseId}/curriculum")
-    public ResponseEntity<List<ModuleResponse>> getCourseCurriculum(@PathVariable Long courseId) {
+    public ResponseEntity<List<ModuleResponses>> getCourseCurriculum(@PathVariable Long courseId) {
         return ResponseEntity.ok(curriculumService.getCourseCurriculum(courseId));
     }
 }
