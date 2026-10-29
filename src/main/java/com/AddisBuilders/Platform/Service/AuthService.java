@@ -51,7 +51,7 @@ public class AuthService {
         // 3. If registered as an EMPLOYER, create their organization record
         if (request.role() == UserRole.EMPLOYER) {
             Organization organization = Organization.builder()
-                    .user(savedUser)
+                    .owner(savedUser)
                     .name(request.organizationName() != null ? request.organizationName() : savedUser.getFullName() + "'s Organization")
                     .description(request.organizationDescription())
                     .website(request.organizationWebsite())
