@@ -1,5 +1,6 @@
 package com.AddisBuilders.Platform.Exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -33,13 +34,15 @@ public class GlobalExceptionHandler {
 
     // 2. Handle Business / IllegalArgument Exceptions (e.g., Email already in use)
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.CONFLICT.value());
-        response.put("error", ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        Map<String, Object> body = Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", HttpStatus.BAD_REQUEST.value(),
+                "error", "Bad Request",
+                "message", ex.getMessage()
+        );
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     // 3. Handle Bad Credentials during Login
@@ -52,6 +55,35 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String message = "A database constraint violation occurred. Check for duplicate entries or invalid references.";
+
+        // Safely inspect root cause for duplicate keys without exposing raw SQL stack traces
+        if (ex.getMessage() != null && ex.getMessage().contains("Duplicate entry")) {
+            if (ex.getMessage().contains("idx_course_module_order")) {
+                message = "A module with this order sequence already exists for this course.";
+            } else if (ex.getMessage().contains("idx_module_lesson_order")) {
+                message = "A lesson with this order sequence already exists for this module.";
+            } else {
+                message = "A record with the same unique value already exists.";
+            }
+        }
+
+        Map<String, Object> body = Map.of(
+                "timestamp", LocalDateTime.now(),
+                "status", HttpStatus.CONFLICT.value(),
+                "error", "Conflict",
+                "message", message
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    /**
+     * Handles general illegal arguments or business rule violations.
+     */
+
 
     // 4. Fallback Generic Exception Handler
     @ExceptionHandler(Exception.class)
