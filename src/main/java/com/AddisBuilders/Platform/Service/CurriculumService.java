@@ -1,6 +1,9 @@
 package com.AddisBuilders.Platform.Service;
 
-import com.AddisBuilders.Platform.DTO.*;
+import com.AddisBuilders.Platform.DTO.CreateLessonRequest;
+import com.AddisBuilders.Platform.DTO.CreateModuleRequest;
+import com.AddisBuilders.Platform.DTO.LessonResponse;
+import com.AddisBuilders.Platform.DTO.ModuleResponses;
 import com.AddisBuilders.Platform.Model.*;
 import com.AddisBuilders.Platform.Model.Module;
 import com.AddisBuilders.Platform.Model.enums.UserRole;
@@ -25,7 +28,7 @@ public class CurriculumService {
     private final LessonRepository lessonRepository;
 
     @Transactional
-    public ModuleResponse addModuleToCourse(Long courseId, CreateModuleRequest request, User currentUser) {
+    public ModuleResponses addModuleToCourse(Long courseId, CreateModuleRequest request, User currentUser) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
 
@@ -67,18 +70,18 @@ public class CurriculumService {
     }
 
     @Transactional(readOnly = true)
-    public List<ModuleResponse> getCourseCurriculum(Long courseId) {
+    public List<ModuleResponses> getCourseCurriculum(Long courseId) {
         List<Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
         return modules.stream().map(this::mapModuleToResponse).toList();
     }
 
-    private ModuleResponse mapModuleToResponse(Module module) {
+    private ModuleResponses mapModuleToResponse(Module module) {
         List<LessonResponse> lessonResponses = lessonRepository.findByModuleIdOrderByLessonOrderAsc(module.getId())
                 .stream()
                 .map(this::mapLessonToResponse)
                 .toList();
 
-        return ModuleResponse.builder()
+        return ModuleResponses.builder()
                 .id(module.getId())
                 .courseId(module.getCourse().getId())
                 .title(module.getTitle())
