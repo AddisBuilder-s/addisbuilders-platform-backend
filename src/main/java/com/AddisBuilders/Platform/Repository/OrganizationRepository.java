@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization,Long> {
     // Custom query to find an organization profile by its owning user ID
-    Optional<Organization> findByUserId(Long userId);
+    Optional<Organization> findByOwnerId(Long userId);
 
     // Check if an organization name already exists to prevent duplicates
     boolean existsByName(String name);
