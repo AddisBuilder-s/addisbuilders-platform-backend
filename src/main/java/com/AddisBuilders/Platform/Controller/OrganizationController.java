@@ -17,7 +17,7 @@ import java.util.List;
  * Controller providing endpoints for partner organization management[cite: 1, 2].
  */
 @RestController
-@RequestMapping("/api/organizations")
+@RequestMapping("/organizations")
 @RequiredArgsConstructor
 public class OrganizationController {
 
