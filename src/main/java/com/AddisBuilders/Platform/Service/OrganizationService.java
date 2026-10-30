@@ -35,6 +35,9 @@ public class OrganizationService {
         if (organizationRepository.existsByName(request.name())) {
             throw new IllegalArgumentException("An organization with this name already exists.");
         }
+        if (organizationRepository.findByOwnerId(currentUser.getId()).isPresent()) {
+            throw new IllegalArgumentException("You already have an organization profile.");
+        }
         // Map DTO payload to Organization JPA Entity[cite: 1, 2]
         Organization organization = Organization.builder()
                 .owner(currentUser) // Assign foreign key reference user_id[cite: 1, 2]
