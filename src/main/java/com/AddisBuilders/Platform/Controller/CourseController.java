@@ -60,8 +60,11 @@ public class CourseController {
      * Retrieve a specific course by its unique ID.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CourseResponse> getCourseById(@PathVariable Long id) {
-        return ResponseEntity.ok(courseService.getCourseById(id));
+    public ResponseEntity<CourseResponse> getCourseById(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.ok(courseService.getCourseById(id, currentUser));
     }
 
     /**
