@@ -92,6 +92,23 @@ public class SubmissionService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<SubmissionResponse> getAllInstructorSubmissions(User currentUser) {
+        // If mentor, filter submissions for assignments belonging to their courses
+        // If SUPER_ADMIN, return all submissions in the platform
+        if (currentUser.getRole() == UserRole.SUPER_ADMIN) {
+            return submissionRepository.findAll()
+                    .stream()
+                    .map(this::mapToResponse)
+                    .toList();
+        }
+
+        return submissionRepository.findByAssignmentCourseMentorId(currentUser.getId())
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     /**
      * Helper mapper to convert entity to response DTO.
      */
