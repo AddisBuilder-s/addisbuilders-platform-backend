@@ -13,20 +13,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * REST controller for managing course assignments.
- */
 @RestController
-@RequestMapping("/api/courses")
+@RequestMapping
 @RequiredArgsConstructor
 public class AssignmentController {
 
     private final AssignmentService assignmentService;
 
-    /**
-     * Create an assignment for a course. Restricted to MENTOR and SUPER_ADMIN roles.
-     */
-    @PostMapping("/{courseId}/assignments")
+    // Create assignment under a course
+    @PostMapping("/courses/{courseId}/assignments")
     @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
     public ResponseEntity<AssignmentResponse> createAssignment(
             @PathVariable Long courseId,
@@ -36,13 +31,22 @@ public class AssignmentController {
         return ResponseEntity.ok(assignmentService.createAssignment(courseId, request, currentUser));
     }
 
-    /**
-     * Retrieve all assignments for a given course. Accessible by students and mentors.
-     */
-    @GetMapping("/{courseId}/assignments")
+    // Get assignments for a specific course
+    @GetMapping("/courses/{courseId}/assignments")
     public ResponseEntity<List<AssignmentResponse>> getAssignmentsByCourse(
             @PathVariable Long courseId
     ) {
         return ResponseEntity.ok(assignmentService.getAssignmentsByCourse(courseId));
+    }
+
+    // Global assignments endpoint matching Dina's assignmentsService.getAssignments()
+    @GetMapping("/assignments")
+    public ResponseEntity<List<AssignmentResponse>> getAllAssignments(
+            @RequestParam(required = false) Long courseId
+    ) {
+        if (courseId != null) {
+            return ResponseEntity.ok(assignmentService.getAssignmentsByCourse(courseId));
+        }
+        return ResponseEntity.ok(assignmentService.getAllAssignments());
     }
 }
