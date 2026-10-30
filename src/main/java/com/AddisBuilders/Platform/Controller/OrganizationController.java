@@ -43,4 +43,15 @@ public class OrganizationController {
     public ResponseEntity<List<OrganizationResponse>> getAllOrganizations() {
         return ResponseEntity.ok(organizationService.getAllOrganizations());
     }
+
+    @GetMapping("/my")
+    @PreAuthorize("hasAnyRole('EMPLOYER', 'INTERNSHIP_COORDINATOR')")
+    public ResponseEntity<OrganizationResponse> getMyOrganization(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(organizationService.getMyOrganization(currentUser));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrganizationResponse> getOrganizationById(@PathVariable Long id) {
+        return ResponseEntity.ok(organizationService.getOrganizationById(id));
+    }
 }

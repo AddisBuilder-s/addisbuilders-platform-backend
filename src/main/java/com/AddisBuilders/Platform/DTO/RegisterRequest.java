@@ -1,11 +1,13 @@
 package com.AddisBuilders.Platform.DTO;
 
 import com.AddisBuilders.Platform.Model.enums.UserRole;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record RegisterRequest(
         @NotBlank(message = "Full name is required")
         @Size(max = 150)
@@ -21,8 +23,10 @@ public record RegisterRequest(
 
         @NotNull(message = "User role is required")
         UserRole role,
-
+        // Organization fields (for EMPLOYER / COORDINATOR)
         String organizationName,
         String organizationDescription,
         String organizationWebsite
+
+
 ) {}
