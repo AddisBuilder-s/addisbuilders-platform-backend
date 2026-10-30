@@ -4,6 +4,8 @@ import com.AddisBuilders.Platform.Model.enums.CourseLevel;
 import com.AddisBuilders.Platform.Model.enums.CourseStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -53,9 +55,11 @@ public class Course {
     @JoinColumn(name = "category_id")
     private CourseCategory category;
 
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
-    @Builder.Default
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
