@@ -6,11 +6,14 @@ import com.AddisBuilders.Platform.Model.Lesson;
 import com.AddisBuilders.Platform.Model.Module;
 import com.AddisBuilders.Platform.Model.StudentProgress;
 import com.AddisBuilders.Platform.Model.User;
+import com.AddisBuilders.Platform.Model.enums.EnrollmentStatus;
 import com.AddisBuilders.Platform.Repository.CourseRepository;
+import com.AddisBuilders.Platform.Repository.EnrollmentRepository;
 import com.AddisBuilders.Platform.Repository.LessonRepository;
 import com.AddisBuilders.Platform.Repository.ModuleRepository;
 import com.AddisBuilders.Platform.Repository.StudentProgressRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +30,25 @@ public class ProgressService {
     private final LessonRepository lessonRepository;
     private final CourseRepository courseRepository;
     private final ModuleRepository moduleRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     /**
      * Marks a specific lesson as completed for the authenticated student.
      */
     @Transactional
-    public Boolean markLessonComplete(Long lessonId, User student) {
+    public void markLessonComplete(Long courseId, Long lessonId, User student) {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new IllegalArgumentException("Lesson not found with ID: " + lessonId));
+
+        Long lessonCourseId = lesson.getModule().getCourse().getId();
+        if (!lessonCourseId.equals(courseId)) {
+            throw new IllegalArgumentException("Lesson " + lessonId + " does not belong to course " + courseId);
+        }
+
+        if (!enrollmentRepository.existsByStudentIdAndCourseIdAndStatus(
+                student.getId(), courseId, EnrollmentStatus.ACTIVE)) {
+            throw new AccessDeniedException("You must be enrolled in this course to track progress");
+        }
 
         // Check if progress entry already exists
         boolean exists = progressRepository.findByStudentIdAndLessonId(student.getId(), lessonId).isPresent();
@@ -46,7 +60,6 @@ public class ProgressService {
                     .build();
             progressRepository.save(progress);
         }
-        return exists;
     }
 
     /**
