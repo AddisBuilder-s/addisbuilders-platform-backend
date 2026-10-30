@@ -16,7 +16,7 @@ import java.util.List;
  * Controller exposing endpoints for internship postings and application processing[cite: 1, 2].
  */
 @RestController
-@RequestMapping("/api/internships")
+@RequestMapping("/internships")
 @RequiredArgsConstructor
 public class InternshipController {
 
