@@ -1,6 +1,7 @@
 package com.AddisBuilders.Platform.Controller;
 
 import com.AddisBuilders.Platform.DTO.CourseProgressResponse;
+import com.AddisBuilders.Platform.DTO.LessonCompletionResponse;
 import com.AddisBuilders.Platform.Model.User;
 import com.AddisBuilders.Platform.Service.ProgressService;
 import lombok.RequiredArgsConstructor;
@@ -23,20 +24,22 @@ public class ProgressController {
     /**
      * Mark a lesson as completed. Restricted to STUDENT role.
      */
-    @PostMapping("/lessons/{lessonId}/complete")
+    @PostMapping("/courses/{courseId}/lessons/{lessonId}/complete")
     @PreAuthorize("hasRole('LEARNER')")
-    public ResponseEntity<String> markLessonComplete(
+    public ResponseEntity<LessonCompletionResponse> markLessonComplete(
+            @PathVariable Long courseId,
             @PathVariable Long lessonId,
             @AuthenticationPrincipal User currentUser
     ) {
-       boolean isCompleted = progressService.markLessonComplete(lessonId, currentUser);
-       if (!isCompleted){
-           return ResponseEntity.ok("Lesson marked as completed successfully.");
-       }else {
-           return  new ResponseEntity<>( "Lesson Already marked as complete",HttpStatus.BAD_REQUEST);
-       }
+        progressService.markLessonComplete(lessonId, currentUser);
+        CourseProgressResponse progress = progressService.getCourseProgress(courseId, currentUser);
 
+        return ResponseEntity.ok(new LessonCompletionResponse(
+                progress.completionPercentage(),
+                progress.completedLessons()
+        ));
     }
+
 
     /**
      * Get course progress percentage for the authenticated student.
