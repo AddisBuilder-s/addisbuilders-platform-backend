@@ -1,8 +1,10 @@
 package com.AddisBuilders.Platform.Controller;
 import com.AddisBuilders.Platform.DTO.CourseResponse;
 import com.AddisBuilders.Platform.DTO.CreateCourseRequest;
+import com.AddisBuilders.Platform.DTO.UpdateCourseRequest;
 import com.AddisBuilders.Platform.Model.User;
 import com.AddisBuilders.Platform.Service.CourseService;
+import com.AddisBuilders.Platform.Service.EnrollmentService;
 import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -18,18 +20,19 @@ import java.util.List;
  * REST Controller providing HTTP API endpoints for managing and retrieving platform courses.
  */
 @RestController
-@RequestMapping("/api/courses")
+@RequestMapping("/courses")
 @Getter // Explicitly ensures Lombok generates getters
 @Setter // Explicitly ensures Lombok generates setters
 @RequiredArgsConstructor
 public class CourseController {
 
     private final CourseService courseService;
+    private final EnrollmentService enrollmentService;
 
     /**
      * Create a new course. Restricted to MENTOR and SUPER_ADMIN roles.
      */
-    @PostMapping("/create")
+    @PostMapping
     @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
     public ResponseEntity<CourseResponse> createCourse(
             @Valid @RequestBody CreateCourseRequest request,
@@ -42,9 +45,16 @@ public class CourseController {
      * Public endpoint to retrieve all published courses for student discovery.
      */
     @GetMapping
-    public ResponseEntity<List<CourseResponse>> getAllPublishedCourses() {
-        return ResponseEntity.ok(courseService.getAllPublishedCourses());
+    public ResponseEntity<List<CourseResponse>> getCourses(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String level,
+            @RequestParam(required = false) String search,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.ok(courseService.getAllCourses(currentUser, category, level, search));
     }
+
+
 
     /**
      * Retrieve a specific course by its unique ID.
@@ -64,5 +74,23 @@ public class CourseController {
             @AuthenticationPrincipal User currentUser
     ) {
         return ResponseEntity.ok(courseService.publishCourse(id, currentUser));
+    }
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    public ResponseEntity<CourseResponse> updateCourse(
+            @PathVariable Long id,
+            @RequestBody UpdateCourseRequest request,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.ok(courseService.updateCourse(id, request, currentUser));
+    }
+
+    @PostMapping("/{courseId}/enroll")
+    @PreAuthorize("hasRole('LEARNER')")
+    public ResponseEntity<CourseResponse> enrollCourse(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.ok(enrollmentService.enrollStudent(courseId, currentUser));
     }
 }
