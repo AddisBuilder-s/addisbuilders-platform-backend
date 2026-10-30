@@ -1,6 +1,7 @@
 package com.AddisBuilders.Platform.Exception;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -58,12 +59,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         String message = "A database constraint violation occurred. Check for duplicate entries or invalid references.";
+        String rootMsg = ex.getRootCause() != null ? ex.getRootCause().getMessage().toLowerCase() : "";
 
-        // Safely inspect root cause for duplicate keys without exposing raw SQL stack traces
-        if (ex.getMessage() != null && ex.getMessage().contains("Duplicate entry")) {
-            if (ex.getMessage().contains("idx_course_module_order")) {
+        // Check for specific unique constraint violations
+        if (rootMsg.contains("email") || rootMsg.contains("uk_user_email") || rootMsg.contains("duplicate entry")) {
+            if (rootMsg.contains("email")) {
+                message = "This email address is already registered. Please use another email or sign in.";
+            } else if (rootMsg.contains("idx_course_module_order")) {
                 message = "A module with this order sequence already exists for this course.";
-            } else if (ex.getMessage().contains("idx_module_lesson_order")) {
+            } else if (rootMsg.contains("idx_module_lesson_order")) {
                 message = "A lesson with this order sequence already exists for this module.";
             } else {
                 message = "A record with the same unique value already exists.";
