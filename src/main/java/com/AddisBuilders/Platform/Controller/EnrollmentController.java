@@ -1,9 +1,10 @@
 package com.AddisBuilders.Platform.Controller;
 
 import com.AddisBuilders.Platform.DTO.EnrollmentResponse;
+import com.AddisBuilders.Platform.DTO.UpdateEnrollmentStatusRequest;
 import com.AddisBuilders.Platform.Model.User;
-import com.AddisBuilders.Platform.Model.enums.EnrollmentStatus;
 import com.AddisBuilders.Platform.Service.EnrollmentService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,7 +12,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class EnrollmentController {
     }
 
     // Matches Dina's apiClient.get('/instructor/students')
-    @GetMapping("instructor/students")
+    @GetMapping("/instructor/students")
     @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
     public ResponseEntity<List<EnrollmentResponse>> getInstructorStudents(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(enrollmentService.getInstructorStudents(currentUser.getId()));
@@ -38,9 +38,9 @@ public class EnrollmentController {
     @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
     public ResponseEntity<EnrollmentResponse> updateEnrollmentStatus(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body
+            @Valid @RequestBody UpdateEnrollmentStatusRequest request,
+            @AuthenticationPrincipal User currentUser
     ) {
-        EnrollmentStatus status = EnrollmentStatus.valueOf(body.get("status").toUpperCase());
-        return ResponseEntity.ok(enrollmentService.updateEnrollmentStatus(id, status));
+        return ResponseEntity.ok(enrollmentService.updateEnrollmentStatus(id, request.status(), currentUser));
     }
 }
