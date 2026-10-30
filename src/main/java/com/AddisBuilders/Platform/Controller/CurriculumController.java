@@ -16,7 +16,7 @@ import java.util.List;
  * Controller handling API endpoints for modules and lessons curriculum hierarchy.
  */
 @RestController
-@RequestMapping("/api/courses")
+@RequestMapping("/courses")
 @RequiredArgsConstructor
 public class CurriculumController {
 
@@ -43,7 +43,10 @@ public class CurriculumController {
     }
 
     @GetMapping("/{courseId}/modules")
-    public ResponseEntity<List<ModuleResponses>> getCourseCurriculum(@PathVariable Long courseId) {
-        return ResponseEntity.ok(curriculumService.getCourseCurriculum(courseId));
+    public ResponseEntity<List<ModuleResponses>> getCourseCurriculum(
+            @PathVariable Long courseId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        return ResponseEntity.ok(curriculumService.getCourseCurriculum(courseId, currentUser));
     }
 }
