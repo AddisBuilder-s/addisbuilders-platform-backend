@@ -51,23 +51,14 @@ public class SubmissionController {
     }
 
     /**
-     * Get all submissions for an assignment. Restricted to course mentors and admins.
+     * Get all submissions for a specific assignment, or all submissions belonging to the
+     * authenticated mentor's courses when no assignment id is supplied.
+     * Restricted to mentors and admins.
      */
-    @GetMapping("/assignments/{assignmentId}/submissions")
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
-    public ResponseEntity<List<SubmissionResponse>> getSubmissionsByAssignment(
-            @PathVariable Long assignmentId,
-            @AuthenticationPrincipal User currentUser
-    ) {
-        return ResponseEntity.ok(submissionService.getSubmissionsByAssignment(assignmentId, currentUser));
-    }
-
-    // Get submissions by assignment OR globally for all mentor assignments
     @GetMapping({"/assignments/{assignmentId}/submissions", "/assignments/submissions"})
     @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
     public ResponseEntity<List<SubmissionResponse>> getSubmissions(
             @PathVariable(required = false) Long assignmentId,
-            @RequestParam(required = false) Long studentId,
             @AuthenticationPrincipal User currentUser
     ) {
         if (assignmentId != null) {
