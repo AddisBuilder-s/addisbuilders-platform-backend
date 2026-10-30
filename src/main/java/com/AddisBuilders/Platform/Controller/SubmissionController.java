@@ -18,7 +18,7 @@ import java.util.List;
  * REST controller handling student submissions and mentor grading endpoints.
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping
 @RequiredArgsConstructor
 public class SubmissionController {
 
@@ -60,5 +60,19 @@ public class SubmissionController {
             @AuthenticationPrincipal User currentUser
     ) {
         return ResponseEntity.ok(submissionService.getSubmissionsByAssignment(assignmentId, currentUser));
+    }
+
+    // Get submissions by assignment OR globally for all mentor assignments
+    @GetMapping({"/assignments/{assignmentId}/submissions", "/assignments/submissions"})
+    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    public ResponseEntity<List<SubmissionResponse>> getSubmissions(
+            @PathVariable(required = false) Long assignmentId,
+            @RequestParam(required = false) Long studentId,
+            @AuthenticationPrincipal User currentUser
+    ) {
+        if (assignmentId != null) {
+            return ResponseEntity.ok(submissionService.getSubmissionsByAssignment(assignmentId, currentUser));
+        }
+        return ResponseEntity.ok(submissionService.getAllInstructorSubmissions(currentUser));
     }
 }
