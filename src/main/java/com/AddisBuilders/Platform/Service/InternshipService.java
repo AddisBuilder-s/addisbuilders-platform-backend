@@ -10,10 +10,12 @@ import com.AddisBuilders.Platform.Model.Organization;
 import com.AddisBuilders.Platform.Model.User;
 import com.AddisBuilders.Platform.Model.enums.ApplicationStatus;
 import com.AddisBuilders.Platform.Model.enums.InternshipStatus;
+import com.AddisBuilders.Platform.Model.enums.UserRole;
 import com.AddisBuilders.Platform.Repository.InternshipApplicationRepository;
 import com.AddisBuilders.Platform.Repository.InternshipListingRepository;
 import com.AddisBuilders.Platform.Repository.OrganizationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,13 @@ public class InternshipService {
         // Validate target organization existence
         Organization organization = organizationRepository.findById(request.organizationId())
                 .orElseThrow(() -> new IllegalArgumentException("Organization not found with ID: " + request.organizationId()));
+
+        // Employers may only publish openings under their own organization. Coordinators and
+        // super admins are allowed to post on behalf of partner organizations.
+        if (currentUser.getRole() == UserRole.EMPLOYER
+                && !organization.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You can only publish internships for your own organization");
+        }
 
         // Construct entity with status PUBLISHED for active viewing[cite: 1, 2, 4]
         InternshipListing listing = InternshipListing.builder()
