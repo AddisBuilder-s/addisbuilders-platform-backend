@@ -29,7 +29,6 @@ public class Organization {
     @Column(nullable = false, length = 200)
     private String name; // Organization or University department name
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String description; // Detailed overview of the organization
 
@@ -39,6 +38,7 @@ public class Organization {
     // Architectural field: Tracks whether Super Admin has verified this organization
     @Enumerated(EnumType.STRING)
     @Column(name = "verification_status", nullable = false)
+    @Builder.Default
     private VerificationStatus verificationStatus = VerificationStatus.PENDING; // PENDING, APPROVED, REJECTED
 
     @Column(name = "logo_url", length = 500)
