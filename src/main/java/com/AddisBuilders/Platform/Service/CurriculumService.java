@@ -6,11 +6,13 @@ import com.AddisBuilders.Platform.DTO.LessonResponse;
 import com.AddisBuilders.Platform.DTO.ModuleResponses;
 import com.AddisBuilders.Platform.Model.*;
 import com.AddisBuilders.Platform.Model.Module;
+import com.AddisBuilders.Platform.Model.enums.CourseStatus;
 import com.AddisBuilders.Platform.Model.enums.UserRole;
 import com.AddisBuilders.Platform.Repository.CourseRepository;
 import com.AddisBuilders.Platform.Repository.LessonRepository;
 import com.AddisBuilders.Platform.Repository.ModuleRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +35,7 @@ public class CurriculumService {
                 .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
 
         if (!course.getMentor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.SUPER_ADMIN) {
-            throw new IllegalArgumentException("Unauthorized: You do not own this course");
+            throw new AccessDeniedException("You do not own this course");
         }
 
         Module module = Module.builder()
@@ -53,7 +55,7 @@ public class CurriculumService {
 
         Course course = module.getCourse();
         if (!course.getMentor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.SUPER_ADMIN) {
-            throw new IllegalArgumentException("Unauthorized: You do not own this course");
+            throw new AccessDeniedException("You do not own this course");
         }
 
         Lesson lesson = Lesson.builder()
@@ -70,7 +72,18 @@ public class CurriculumService {
     }
 
     @Transactional(readOnly = true)
-    public List<ModuleResponses> getCourseCurriculum(Long courseId) {
+    public List<ModuleResponses> getCourseCurriculum(Long courseId, User currentUser) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
+
+        boolean isOwnerOrAdmin = currentUser != null
+                && (course.getMentor().getId().equals(currentUser.getId())
+                    || currentUser.getRole() == UserRole.SUPER_ADMIN);
+
+        if (course.getStatus() != CourseStatus.PUBLISHED && !isOwnerOrAdmin) {
+            throw new AccessDeniedException("This course is not published yet");
+        }
+
         List<Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
         return modules.stream().map(this::mapModuleToResponse).toList();
     }
