@@ -31,7 +31,7 @@ public class ProgressController {
             @PathVariable Long lessonId,
             @AuthenticationPrincipal User currentUser
     ) {
-        progressService.markLessonComplete(lessonId, currentUser);
+        progressService.markLessonComplete(courseId, lessonId, currentUser);
         CourseProgressResponse progress = progressService.getCourseProgress(courseId, currentUser);
 
         return ResponseEntity.ok(new LessonCompletionResponse(
