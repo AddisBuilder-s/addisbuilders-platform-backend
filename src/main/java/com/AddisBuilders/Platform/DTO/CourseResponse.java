@@ -6,20 +6,19 @@ import lombok.Builder;
 
 import java.time.LocalDateTime;
 
-/**
- * Data Transfer Object representing the public output of a Course entity.
- * Decouples database entities from API client requirements.
- */
 @Builder
 public record CourseResponse(
         Long id,
         String title,
         String description,
+        String shortDescription,
         CourseLevel level,
         CourseStatus status,
         String thumbnailUrl,
+        Integer durationWeeks,
+        String learningObjectives,
         Long mentorId,
-        String mentorName,
+        String instructorName, // Mapped to mentor.fullName so frontend card displays it correctly
         Long categoryId,
         String categoryName,
         LocalDateTime createdAt
