@@ -11,8 +11,7 @@ import com.AddisBuilders.Platform.Model.enums.VerificationStatus;
 import com.AddisBuilders.Platform.Repository.OrganizationRepository;
 import com.AddisBuilders.Platform.Repository.UserRepository;
 import com.AddisBuilders.Platform.Security.JwtUtils;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
+import lombok.RequiredArgsConstructor;import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,7 +35,12 @@ public class AuthService {
             throw new IllegalArgumentException("Error: Email is already in use!");
         }
 
-        // 2. Build and save the User entity
+        // 2. Prevent self-registration as a privileged administrator
+        if (request.role() == UserRole.SUPER_ADMIN) {
+            throw new IllegalArgumentException("Registration as SUPER_ADMIN is not permitted.");
+        }
+
+        // 3. Build and save the User entity
         User user = User.builder()
                 .fullName(request.fullName())
                 .email(request.email())
@@ -48,7 +52,7 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
 
-        // 3. If registered as an EMPLOYER, create their organization record
+        // 4. If registered as an EMPLOYER, create their organization record
         if (request.role() == UserRole.EMPLOYER) {
             Organization organization = Organization.builder()
                     .owner(savedUser)
@@ -60,7 +64,7 @@ public class AuthService {
             organizationRepository.save(organization);
         }
 
-        // 4. Generate JWT token for immediate login after registration
+        // 5. Generate JWT token for immediate login after registration
         String jwtToken = jwtUtils.generateToken(savedUser);
 
         return AuthResponse.builder()
