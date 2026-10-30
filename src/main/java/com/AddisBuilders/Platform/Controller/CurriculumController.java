@@ -42,7 +42,7 @@ public class CurriculumController {
         return ResponseEntity.ok(curriculumService.addLessonToModule(moduleId, request, currentUser));
     }
 
-    @GetMapping("/{courseId}/curriculum")
+    @GetMapping("/{courseId}/modules")
     public ResponseEntity<List<ModuleResponses>> getCourseCurriculum(@PathVariable Long courseId) {
         return ResponseEntity.ok(curriculumService.getCourseCurriculum(courseId));
     }
