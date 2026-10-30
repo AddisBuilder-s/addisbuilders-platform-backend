@@ -32,6 +32,9 @@ public class OrganizationService {
      */
     @Transactional
     public OrganizationResponse createOrganization(CreateOrganizationRequest request, User currentUser) {
+        if (organizationRepository.existsByName(request.name())) {
+            throw new IllegalArgumentException("An organization with this name already exists.");
+        }
         // Map DTO payload to Organization JPA Entity[cite: 1, 2]
         Organization organization = Organization.builder()
                 .owner(currentUser) // Assign foreign key reference user_id[cite: 1, 2]
@@ -59,6 +62,19 @@ public class OrganizationService {
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
+    }
+    @Transactional(readOnly = true)
+    public OrganizationResponse getMyOrganization(User currentUser) {
+        Organization org = organizationRepository.findByOwnerId(currentUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("No organization profile found for the current user."));
+        return mapToResponse(org);
+    }
+
+    @Transactional(readOnly = true)
+    public OrganizationResponse getOrganizationById(Long id) {
+        Organization org = organizationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Organization not found with ID: " + id));
+        return mapToResponse(org);
     }
 
     /**
