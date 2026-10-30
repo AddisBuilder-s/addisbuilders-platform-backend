@@ -4,14 +4,18 @@ import com.AddisBuilders.Platform.DTO.GradeSubmissionRequest;
 import com.AddisBuilders.Platform.DTO.SubmissionResponse;
 import com.AddisBuilders.Platform.DTO.SubmitAssignmentRequest;
 import com.AddisBuilders.Platform.Model.*;
+import com.AddisBuilders.Platform.Model.enums.EnrollmentStatus;
 import com.AddisBuilders.Platform.Model.enums.SubmissionStatus;
 import com.AddisBuilders.Platform.Model.enums.UserRole;
 import com.AddisBuilders.Platform.Repository.AssignmentRepository;
+import com.AddisBuilders.Platform.Repository.EnrollmentRepository;
 import com.AddisBuilders.Platform.Repository.SubmissionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,6 +28,7 @@ public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
     private final AssignmentRepository assignmentRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     /**
      * Allows a student to submit or update their work for an assignment.
@@ -32,6 +37,16 @@ public class SubmissionService {
     public SubmissionResponse submitAssignment(Long assignmentId, SubmitAssignmentRequest request, User learner) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Assignment not found with ID: " + assignmentId));
+
+        Course course = assignment.getCourse();
+        if (!enrollmentRepository.existsByStudentIdAndCourseIdAndStatus(
+                learner.getId(), course.getId(), EnrollmentStatus.ACTIVE)) {
+            throw new AccessDeniedException("You must be enrolled in this course to submit work");
+        }
+
+        if (assignment.getDueAt() != null && LocalDateTime.now().isAfter(assignment.getDueAt())) {
+            throw new IllegalArgumentException("The deadline for this assignment has passed");
+        }
 
         // Check if submission already exists for this learner & assignment (supports resubmissions)
         Submission submission = submissionRepository.findByAssignmentIdAndLearnerId(assignmentId, learner.getId())
@@ -61,7 +76,12 @@ public class SubmissionService {
 
         Course course = submission.getAssignment().getCourse();
         if (!course.getMentor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.SUPER_ADMIN) {
-            throw new IllegalArgumentException("Unauthorized: You do not own the course for this submission");
+            throw new AccessDeniedException("You do not own the course for this submission");
+        }
+
+        Integer maxPoints = submission.getAssignment().getPoints();
+        if (maxPoints != null && request.grade().compareTo(BigDecimal.valueOf(maxPoints)) > 0) {
+            throw new IllegalArgumentException("Grade cannot exceed the maximum points for this assignment (" + maxPoints + ")");
         }
 
         submission.setGrade(request.grade());
@@ -83,7 +103,7 @@ public class SubmissionService {
 
         Course course = assignment.getCourse();
         if (!course.getMentor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.SUPER_ADMIN) {
-            throw new IllegalArgumentException("Unauthorized: You do not own this course");
+            throw new AccessDeniedException("You do not own this course");
         }
 
         return submissionRepository.findByAssignmentId(assignmentId)
