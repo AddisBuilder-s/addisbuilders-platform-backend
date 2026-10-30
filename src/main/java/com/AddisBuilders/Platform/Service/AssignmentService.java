@@ -63,6 +63,16 @@ public class AssignmentService {
                 .map(this::mapToResponse)
                 .toList();
     }
+    /**
+     * Retrieves all coursework assignments across all courses in the platform.
+     */
+    @Transactional(readOnly = true)
+    public List<AssignmentResponse> getAllAssignments() {
+        return assignmentRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
 
     /**
      * Helper mapper to convert Assignment entity to response DTO.
