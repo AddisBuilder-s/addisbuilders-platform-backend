@@ -8,6 +8,7 @@ import com.AddisBuilders.Platform.Model.enums.UserRole;
 import com.AddisBuilders.Platform.Repository.AssignmentRepository;
 import com.AddisBuilders.Platform.Repository.CourseRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +34,7 @@ public class AssignmentService {
 
         // Verify authorization: only the course mentor or super admin can add assignments
         if (!course.getMentor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.SUPER_ADMIN) {
-            throw new IllegalArgumentException("Unauthorized: You do not own this course");
+            throw new AccessDeniedException("You do not own this course");
         }
 
         Assignment assignment = Assignment.builder()
