@@ -5,10 +5,13 @@ import com.AddisBuilders.Platform.DTO.EnrollmentResponse;
 import com.AddisBuilders.Platform.Model.Course;
 import com.AddisBuilders.Platform.Model.Enrollment;
 import com.AddisBuilders.Platform.Model.User;
+import com.AddisBuilders.Platform.Model.enums.CourseStatus;
 import com.AddisBuilders.Platform.Model.enums.EnrollmentStatus;
+import com.AddisBuilders.Platform.Model.enums.UserRole;
 import com.AddisBuilders.Platform.Repository.CourseRepository;
 import com.AddisBuilders.Platform.Repository.EnrollmentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,10 @@ public class EnrollmentService {
     public CourseResponse enrollStudent(Long courseId, User student) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
+
+        if (course.getStatus() != CourseStatus.PUBLISHED) {
+            throw new IllegalArgumentException("You can only enroll in published courses.");
+        }
 
         if (!enrollmentRepository.existsByStudentIdAndCourseId(student.getId(), courseId)) {
             Enrollment enrollment = Enrollment.builder()
@@ -67,9 +74,14 @@ public class EnrollmentService {
      * Updates enrollment status (e.g., ACTIVE -> COMPLETED or DROPPED).
      */
     @Transactional
-    public EnrollmentResponse updateEnrollmentStatus(Long enrollmentId, EnrollmentStatus status) {
+    public EnrollmentResponse updateEnrollmentStatus(Long enrollmentId, EnrollmentStatus status, User currentUser) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
                 .orElseThrow(() -> new IllegalArgumentException("Enrollment record not found with ID: " + enrollmentId));
+
+        boolean ownsCourse = enrollment.getCourse().getMentor().getId().equals(currentUser.getId());
+        if (!ownsCourse && currentUser.getRole() != UserRole.SUPER_ADMIN) {
+            throw new AccessDeniedException("You do not have permission to update this enrollment");
+        }
 
         enrollment.setStatus(status);
         Enrollment updated = enrollmentRepository.save(enrollment);
