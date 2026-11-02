@@ -6,6 +6,7 @@ import com.AddisBuilders.Platform.Service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
     }
 
     @PostMapping("/login")
@@ -39,6 +40,9 @@ public class AuthController {
                 .email(currentUser.getEmail())
                 .fullName(currentUser.getFullName())
                 .role(currentUser.getRole())
+                .coordinatorStatus(currentUser.getCoordinatorStatus())
+                .createdAt(currentUser.getCreatedAt())
+                .isActive(currentUser.getStatus() == com.AddisBuilders.Platform.Model.enums.UserStatus.ACTIVE)
                 .build();
 
         return ResponseEntity.ok(response);
