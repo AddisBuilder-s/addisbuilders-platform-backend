@@ -1,21 +1,28 @@
 package com.AddisBuilders.Platform.DTO;
 import com.AddisBuilders.Platform.Model.enums.UserRole;
+import com.AddisBuilders.Platform.Model.enums.ApprovalStatus;
 import lombok.Builder;
+
+import java.time.LocalDateTime;
 
 @Builder
 public record AuthResponse(
+        Long id,
         String token,
         String type,
         String email,
         String fullName,
-        UserRole role
+        UserRole role,
+        ApprovalStatus coordinatorStatus,
+        ApprovalStatus mentorStatus,
+        String university,
+        String department,
+        String employeeId,
+        String proofDocumentUrl,
+        LocalDateTime createdAt,
+        boolean isActive
 ) {
-    // Compact constructor to set a default value for 'type' if not specified
-    public AuthResponse(String token, String type, String email, String fullName, UserRole role) {
-        this.token = token;
-        this.type = (type != null) ? type : "Bearer";
-        this.email = email;
-        this.fullName = fullName;
-        this.role = role;
+    public AuthResponse {
+        type = type != null ? type : "Bearer";
     }
 }
