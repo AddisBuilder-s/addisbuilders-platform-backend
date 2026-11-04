@@ -8,6 +8,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "courses")
@@ -28,7 +30,7 @@ public class Course {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "short_description", columnDefinition = "TEXT")
     private String shortDescription;
 
     @Enumerated(EnumType.STRING)
@@ -40,11 +42,13 @@ public class Course {
     @Builder.Default
     private CourseStatus status = CourseStatus.DRAFT;
 
+    @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
+    @Column(name = "duration_weeks")
     private Integer durationWeeks;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "learning_objectives", columnDefinition = "TEXT")
     private String learningObjectives; // stored as comma-separated or JSON/newline text
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -55,6 +59,11 @@ public class Course {
     @JoinColumn(name = "category_id")
     private CourseCategory category;
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC, id ASC")
+    @Builder.Default
+    private List<CourseMaterial> materials = new ArrayList<>();
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -62,4 +71,13 @@ public class Course {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    /**
+     * Derived, non-persisted convenience value used by API responses so clients can show
+     * the course author without a second request.
+     */
+    @Transient
+    public String getInstructorName() {
+        return mentor != null ? mentor.getFullName() : null;
+    }
 }
