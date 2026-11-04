@@ -1,6 +1,7 @@
 package com.AddisBuilders.Platform.DTO;
 
 import lombok.Builder;
+import java.util.List;
 
 /**
  * Response DTO returning a student's completion statistics for a course.
@@ -11,5 +12,6 @@ public record CourseProgressResponse(
         String courseTitle,
         long totalLessons,
         long completedLessons,
-        double completionPercentage
+        double completionPercentage,
+        List<Long> completedLessonIds
 ) {}
