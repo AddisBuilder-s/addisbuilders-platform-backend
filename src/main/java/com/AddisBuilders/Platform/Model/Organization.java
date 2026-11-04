@@ -29,11 +29,38 @@ public class Organization {
     @Column(nullable = false, length = 200)
     private String name; // Organization or University department name
 
+    @Column(length = 150)
+    private String industry;
+
+    @Column(length = 255)
+    private String location;
+
     @Column(columnDefinition = "TEXT")
     private String description; // Detailed overview of the organization
 
     @Column(length = 255)
     private String website; // Official corporate or university website URL
+
+    @Column(name = "contact_email", length = 255)
+    private String contactEmail;
+
+    @Column(name = "contact_phone", length = 40)
+    private String contactPhone;
+
+    @Column(name = "registration_number", length = 150)
+    private String registrationNumber;
+
+    @Column(name = "tax_id", length = 150)
+    private String taxId;
+
+    @Column(name = "verification_notes", columnDefinition = "TEXT")
+    private String verificationNotes;
+
+    @Column(name = "verification_document_name", length = 255)
+    private String verificationDocumentName;
+
+    @Column(name = "verification_document_url", length = 1000)
+    private String verificationDocumentUrl;
 
     // Architectural field: Tracks whether Super Admin has verified this organization
     @Enumerated(EnumType.STRING)
