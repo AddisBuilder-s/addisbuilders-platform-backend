@@ -28,14 +28,14 @@ public class EnrollmentController {
 
     // Matches Dina's apiClient.get('/instructor/students')
     @GetMapping("/instructor/students")
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @accountAuthorization.isApprovedMentor(authentication)")
     public ResponseEntity<List<EnrollmentResponse>> getInstructorStudents(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(enrollmentService.getInstructorStudents(currentUser.getId()));
     }
 
     // Matches Dina's apiClient.patch('/enrollments/{id}/status')
     @PatchMapping("/enrollments/{id}/status")
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @accountAuthorization.isApprovedMentor(authentication)")
     public ResponseEntity<EnrollmentResponse> updateEnrollmentStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateEnrollmentStatusRequest request,
