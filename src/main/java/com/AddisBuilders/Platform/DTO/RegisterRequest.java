@@ -23,6 +23,12 @@ public record RegisterRequest(
 
         @NotNull(message = "User role is required")
         UserRole role,
+        String phone,
+        String university,
+        String department,
+        String studentId,
+        String employeeId,
+        String proofDocumentUrl,
         // Organization fields (for EMPLOYER / COORDINATOR)
         String organizationName,
         String organizationDescription,

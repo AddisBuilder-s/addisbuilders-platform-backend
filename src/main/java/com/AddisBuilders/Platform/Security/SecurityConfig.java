@@ -43,13 +43,19 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Public auth endpoints
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/course-categories", "/course-categories/*",
+                                "/categories", "/categories/*").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // CORS preflight
+                        .requestMatchers(HttpMethod.GET, "/uploads/avatars/**").permitAll()
                         .requestMatchers("/organizations/my").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/courses",
                                 "/courses/*",
                                 "/courses/*/modules",
+                                "/courses/*/materials",
                                 "/internships/listings",
+                                "/internships/listings/*",
                                 "/organizations",
                                 "/organizations/*").permitAll() // Public catalogue browsing
                         .anyRequest().authenticated() // Everything else requires authentication
