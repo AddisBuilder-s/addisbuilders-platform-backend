@@ -12,6 +12,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -51,6 +52,18 @@ public class GlobalExceptionHandler {
         return errorResponse(HttpStatus.BAD_REQUEST, message);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex) {
+        String message = ex.getMessage() != null ? ex.getMessage() : "Resource not found";
+        return errorResponse(HttpStatus.NOT_FOUND, message);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(ConflictException ex) {
+        String message = ex.getMessage() != null ? ex.getMessage() : "The request conflicts with an existing record";
+        return errorResponse(HttpStatus.CONFLICT, message);
+    }
+
     // 4. Handle Bad Credentials during Login
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentialsException(BadCredentialsException ex) {
@@ -88,6 +101,11 @@ public class GlobalExceptionHandler {
         }
 
         return errorResponse(HttpStatus.CONFLICT, message);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleUploadTooLarge(MaxUploadSizeExceededException ex) {
+        return errorResponse(HttpStatus.PAYLOAD_TOO_LARGE, "Files cannot exceed 10 MB");
     }
 
     // 8. Fallback Generic Exception Handler
