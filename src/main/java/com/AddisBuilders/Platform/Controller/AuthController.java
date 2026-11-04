@@ -33,19 +33,7 @@ public class AuthController {
         if (currentUser == null) {
             return ResponseEntity.status(401).build();
         }
-
-        AuthResponse response = AuthResponse.builder()
-                .token(null) // No need to re-issue token here
-                .type("Bearer")
-                .email(currentUser.getEmail())
-                .fullName(currentUser.getFullName())
-                .role(currentUser.getRole())
-                .coordinatorStatus(currentUser.getCoordinatorStatus())
-                .createdAt(currentUser.getCreatedAt())
-                .isActive(currentUser.getStatus() == com.AddisBuilders.Platform.Model.enums.UserStatus.ACTIVE)
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(authService.currentUser(currentUser));
     }
 
 
