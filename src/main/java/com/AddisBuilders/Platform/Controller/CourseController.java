@@ -6,13 +6,12 @@ import com.AddisBuilders.Platform.Model.User;
 import com.AddisBuilders.Platform.Service.CourseService;
 import com.AddisBuilders.Platform.Service.EnrollmentService;
 import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -21,8 +20,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/courses")
-@Getter // Explicitly ensures Lombok generates getters
-@Setter // Explicitly ensures Lombok generates setters
 @RequiredArgsConstructor
 public class CourseController {
 
@@ -33,12 +30,14 @@ public class CourseController {
      * Create a new course. Restricted to MENTOR and SUPER_ADMIN roles.
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @accountAuthorization.isApprovedMentor(authentication)")
     public ResponseEntity<CourseResponse> createCourse(
             @Valid @RequestBody CreateCourseRequest request,
             @AuthenticationPrincipal User currentUser
     ) {
-        return ResponseEntity.ok(courseService.createCourse(request, currentUser));
+        CourseResponse created = courseService.createCourse(request, currentUser);
+        return ResponseEntity.created(ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}").buildAndExpand(created.id()).toUri()).body(created);
     }
 
     /**
@@ -71,7 +70,7 @@ public class CourseController {
      * Publish a course. Restricted to the MENTOR who owns the course or a SUPER_ADMIN.
      */
     @PatchMapping("/{id}/publish")
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @accountAuthorization.isApprovedMentor(authentication)")
     public ResponseEntity<CourseResponse> publishCourse(
             @PathVariable Long id,
             @AuthenticationPrincipal User currentUser
@@ -79,10 +78,10 @@ public class CourseController {
         return ResponseEntity.ok(courseService.publishCourse(id, currentUser));
     }
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @accountAuthorization.isApprovedMentor(authentication)")
     public ResponseEntity<CourseResponse> updateCourse(
             @PathVariable Long id,
-            @RequestBody UpdateCourseRequest request,
+            @Valid @RequestBody UpdateCourseRequest request,
             @AuthenticationPrincipal User currentUser
     ) {
         return ResponseEntity.ok(courseService.updateCourse(id, request, currentUser));
