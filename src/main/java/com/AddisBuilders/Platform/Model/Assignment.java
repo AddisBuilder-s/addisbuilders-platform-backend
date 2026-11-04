@@ -39,4 +39,15 @@ public class Assignment {
     @Column(name = "points", nullable = false)
     @Builder.Default
     private Integer points = 100;
+
+    @Column(name = "attachment_url", length = 1000)
+    private String attachmentUrl;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
