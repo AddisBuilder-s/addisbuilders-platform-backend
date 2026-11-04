@@ -19,6 +19,12 @@ public record AuthResponse(
         String department,
         String employeeId,
         String proofDocumentUrl,
+        String phone,
+        String bio,
+        String studentId,
+        String cvUrl,
+        String avatarUrl,
+        Long organizationId,
         LocalDateTime createdAt,
         boolean isActive
 ) {
