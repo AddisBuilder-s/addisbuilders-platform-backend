@@ -24,6 +24,12 @@ public class SubmissionController {
 
     private final SubmissionService submissionService;
 
+    @GetMapping("/users/me/submissions")
+    @PreAuthorize("hasRole('LEARNER')")
+    public ResponseEntity<List<SubmissionResponse>> getMySubmissions(@AuthenticationPrincipal User learner) {
+        return ResponseEntity.ok(submissionService.getSubmissionsForLearner(learner));
+    }
+
     /**
      * Submit an assignment. Restricted to LEARNER role.
      */
@@ -41,7 +47,7 @@ public class SubmissionController {
      * Grade a student submission. Restricted to MENTOR and SUPER_ADMIN roles.
      */
     @PatchMapping("/submissions/{submissionId}/grade")
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @accountAuthorization.isApprovedMentor(authentication)")
     public ResponseEntity<SubmissionResponse> gradeSubmission(
             @PathVariable Long submissionId,
             @Valid @RequestBody GradeSubmissionRequest request,
@@ -56,7 +62,7 @@ public class SubmissionController {
      * Restricted to mentors and admins.
      */
     @GetMapping({"/assignments/{assignmentId}/submissions", "/assignments/submissions"})
-    @PreAuthorize("hasAnyRole('MENTOR', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or @accountAuthorization.isApprovedMentor(authentication)")
     public ResponseEntity<List<SubmissionResponse>> getSubmissions(
             @PathVariable(required = false) Long assignmentId,
             @AuthenticationPrincipal User currentUser

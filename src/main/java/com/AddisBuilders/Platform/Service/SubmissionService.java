@@ -1,5 +1,7 @@
 package com.AddisBuilders.Platform.Service;
 
+import com.AddisBuilders.Platform.Exception.ResourceNotFoundException;
+
 import com.AddisBuilders.Platform.DTO.GradeSubmissionRequest;
 import com.AddisBuilders.Platform.DTO.SubmissionResponse;
 import com.AddisBuilders.Platform.DTO.SubmitAssignmentRequest;
@@ -29,6 +31,8 @@ public class SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final AssignmentRepository assignmentRepository;
     private final EnrollmentRepository enrollmentRepository;
+    private final NotificationService notifications;
+    private final AuditLogService auditLog;
 
     /**
      * Allows a student to submit or update their work for an assignment.
@@ -36,11 +40,11 @@ public class SubmissionService {
     @Transactional
     public SubmissionResponse submitAssignment(Long assignmentId, SubmitAssignmentRequest request, User learner) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found with ID: " + assignmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found with ID: " + assignmentId));
 
         Course course = assignment.getCourse();
-        if (!enrollmentRepository.existsByStudentIdAndCourseIdAndStatus(
-                learner.getId(), course.getId(), EnrollmentStatus.ACTIVE)) {
+        if (!enrollmentRepository.existsByStudentIdAndCourseIdAndStatusIn(
+                learner.getId(), course.getId(), java.util.List.of(EnrollmentStatus.ACTIVE, EnrollmentStatus.COMPLETED))) {
             throw new AccessDeniedException("You must be enrolled in this course to submit work");
         }
 
@@ -63,6 +67,9 @@ public class SubmissionService {
         // For updates, we can refresh submittedAt or keep original.
 
         Submission savedSubmission = submissionRepository.save(submission);
+        auditLog.record(learner, "ASSIGNMENT_SUBMITTED", "SUBMISSION", savedSubmission.getId(), assignment.getTitle(), null);
+        notifications.notify(course.getMentor(), "New assignment submission",
+                learner.getFullName() + " submitted " + assignment.getTitle() + ".", "INFO", "/mentor/submissions");
         return mapToResponse(savedSubmission);
     }
 
@@ -72,7 +79,7 @@ public class SubmissionService {
     @Transactional
     public SubmissionResponse gradeSubmission(Long submissionId, GradeSubmissionRequest request, User currentUser) {
         Submission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new IllegalArgumentException("Submission not found with ID: " + submissionId));
+                .orElseThrow(() -> new ResourceNotFoundException("Submission not found with ID: " + submissionId));
 
         Course course = submission.getAssignment().getCourse();
         if (!course.getMentor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.SUPER_ADMIN) {
@@ -86,10 +93,15 @@ public class SubmissionService {
 
         submission.setGrade(request.grade());
         submission.setFeedback(request.feedback());
-        submission.setStatus(request.status());
+        submission.setStatus(request.status() != null ? request.status() : SubmissionStatus.GRADED);
         submission.setGradedAt(LocalDateTime.now());
 
         Submission updatedSubmission = submissionRepository.save(submission);
+        notifications.notify(submission.getLearner(), "Assignment feedback is ready",
+                "Your submission for " + submission.getAssignment().getTitle() + " has been graded.",
+                "SUCCESS", "/learner/assignments");
+        auditLog.record(currentUser, "SUBMISSION_GRADED", "SUBMISSION", submissionId,
+                "Grade recorded for " + submission.getAssignment().getTitle(), null);
         return mapToResponse(updatedSubmission);
     }
 
@@ -99,7 +111,7 @@ public class SubmissionService {
     @Transactional(readOnly = true)
     public List<SubmissionResponse> getSubmissionsByAssignment(Long assignmentId, User currentUser) {
         Assignment assignment = assignmentRepository.findById(assignmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Assignment not found with ID: " + assignmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Assignment not found with ID: " + assignmentId));
 
         Course course = assignment.getCourse();
         if (!course.getMentor().getId().equals(currentUser.getId()) && currentUser.getRole() != UserRole.SUPER_ADMIN) {
@@ -129,6 +141,12 @@ public class SubmissionService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<SubmissionResponse> getSubmissionsForLearner(User learner) {
+        return submissionRepository.findByLearnerId(learner.getId()).stream()
+                .map(this::mapToResponse).toList();
+    }
+
     /**
      * Helper mapper to convert entity to response DTO.
      */
@@ -137,8 +155,11 @@ public class SubmissionService {
                 .id(submission.getId())
                 .assignmentId(submission.getAssignment().getId())
                 .assignmentTitle(submission.getAssignment().getTitle())
+                .courseId(submission.getAssignment().getCourse().getId())
+                .courseTitle(submission.getAssignment().getCourse().getTitle())
                 .learnerId(submission.getLearner().getId())
                 .learnerName(submission.getLearner().getFullName())
+                .learnerEmail(submission.getLearner().getEmail())
                 .textAnswer(submission.getTextAnswer())
                 .fileUrl(submission.getFileUrl())
                 .status(submission.getStatus())

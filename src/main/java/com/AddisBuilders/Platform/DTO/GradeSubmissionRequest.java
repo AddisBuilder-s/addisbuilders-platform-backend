@@ -16,6 +16,5 @@ public record GradeSubmissionRequest(
 
         String feedback,
 
-        @NotNull(message = "Submission status is required")
         SubmissionStatus status
 ) {}
