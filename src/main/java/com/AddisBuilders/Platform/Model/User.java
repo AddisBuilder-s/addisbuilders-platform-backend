@@ -34,6 +34,39 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true, length = 255)
     private String email;
 
+    @Column(length = 40)
+    private String phone;
+
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(length = 200)
+    private String university;
+
+    @Column(length = 200)
+    private String department;
+
+    @Column(name = "student_id", length = 100)
+    private String studentId;
+
+    @Column(name = "cv_url", length = 1000)
+    private String cvUrl;
+
+    @Column(name = "avatar_url", length = 1000)
+    private String avatarUrl;
+
+    @Column(name = "employee_id", length = 100)
+    private String employeeId;
+
+    @Column(name = "proof_document_url", length = 1000)
+    private String proofDocumentUrl;
+
+    @Column(name = "coordinator_decision_notes", columnDefinition = "TEXT")
+    private String coordinatorDecisionNotes;
+
+    @Column(name = "coordinator_decision_at")
+    private LocalDateTime coordinatorDecisionAt;
+
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
@@ -49,6 +82,16 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "coordinator_status")
     private ApprovalStatus coordinatorStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mentor_status")
+    private ApprovalStatus mentorStatus;
+
+    @Column(name = "mentor_decision_notes", columnDefinition = "TEXT")
+    private String mentorDecisionNotes;
+
+    @Column(name = "mentor_decision_at")
+    private LocalDateTime mentorDecisionAt;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
