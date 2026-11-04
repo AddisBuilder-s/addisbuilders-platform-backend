@@ -15,7 +15,18 @@ public record InternshipListingResponse(
         String description,
         String requirements,
         WorkMode workMode,
+        String location,
+        String category,
+        String responsibilities,
+        String eligibility,
+        String stipend,
+        Integer durationMonths,
         LocalDateTime deadline,
         InternshipStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Long postedById,
+        String postedByRole,
+        long applicantsCount,
+        boolean isSaved,
+        boolean hasApplied
 ) {}

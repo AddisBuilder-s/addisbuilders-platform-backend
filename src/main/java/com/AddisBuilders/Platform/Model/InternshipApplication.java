@@ -36,6 +36,9 @@ public class InternshipApplication {
     @Column(name = "resume_url", length = 500)
     private String resumeUrl;
 
+    @Column(columnDefinition = "TEXT")
+    private String notes;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     @Builder.Default

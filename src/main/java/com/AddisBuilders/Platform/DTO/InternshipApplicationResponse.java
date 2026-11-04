@@ -12,8 +12,14 @@ public record InternshipApplicationResponse(
         String internshipTitle,
         Long learnerId,
         String learnerName,
+        String learnerEmail,
+        String learnerPhone,
+        String university,
+        String department,
         String coverLetter,
         String resumeUri,
+        String organizationName,
         ApplicationStatus status,
-        LocalDateTime appliedAt
+        LocalDateTime appliedAt,
+        String notes
 ) {}

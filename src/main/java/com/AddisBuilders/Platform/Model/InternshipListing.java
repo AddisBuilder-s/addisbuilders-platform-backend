@@ -38,6 +38,25 @@ public class InternshipListing {
     @Column(columnDefinition = "TEXT")
     private String requirements;
 
+    @Column(length = 255)
+    private String location;
+
+    @Column(length = 150)
+    private String category;
+
+    @Column(columnDefinition = "TEXT")
+    private String responsibilities;
+
+    @Column(columnDefinition = "TEXT")
+    private String eligibility;
+
+    @Column(length = 150)
+    private String stipend;
+
+    @Column(name = "duration_months", nullable = false)
+    @Builder.Default
+    private Integer durationMonths = 6;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "work_mode", nullable = false, length = 50)
     private WorkMode workMode;

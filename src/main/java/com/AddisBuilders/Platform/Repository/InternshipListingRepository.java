@@ -11,4 +11,6 @@ import java.util.List;
 public interface InternshipListingRepository extends JpaRepository<InternshipListing, Long> {
     List<InternshipListing> findByOrganizationId(Long organizationId);
     List<InternshipListing> findByStatus(InternshipStatus status);
+    List<InternshipListing> findByOrganizationOwnerIdOrderByCreatedAtDesc(Long ownerId);
+    List<InternshipListing> findByCoordinatorIdOrderByCreatedAtDesc(Long coordinatorId);
 }

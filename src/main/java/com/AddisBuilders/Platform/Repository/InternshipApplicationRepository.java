@@ -12,4 +12,9 @@ public interface InternshipApplicationRepository extends JpaRepository<Internshi
     List<InternshipApplication> findByLearnerId(Long learnerId);
     List<InternshipApplication> findByInternshipId(Long internshipId);
     Optional<InternshipApplication> findByInternshipIdAndLearnerId(Long internshipId, Long learnerId);
+    List<InternshipApplication> findByInternshipOrganizationOwnerIdOrderByAppliedAtDesc(Long ownerId);
+    List<InternshipApplication> findAllByOrderByAppliedAtDesc();
+    long countByInternshipId(Long internshipId);
+    boolean existsByResumeUrlContaining(String fileId);
+    boolean existsByResumeUrlContainingAndInternship_Organization_Owner_Id(String fileId, Long employerId);
 }
