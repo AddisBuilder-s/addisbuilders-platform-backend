@@ -5,6 +5,7 @@ import com.AddisBuilders.Platform.Model.enums.CourseStatus;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Builder
 public record CourseResponse(
@@ -21,5 +22,6 @@ public record CourseResponse(
         String instructorName, // Mapped to mentor.fullName so frontend card displays it correctly
         Long categoryId,
         String categoryName,
+        List<MaterialResponse> materials,
         LocalDateTime createdAt
 ) {}
