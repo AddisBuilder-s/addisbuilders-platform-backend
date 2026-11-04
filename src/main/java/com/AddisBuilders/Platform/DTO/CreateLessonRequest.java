@@ -19,7 +19,11 @@ public record CreateLessonRequest(
 
         String body,
 
+        @Size(max = 1000, message = "Content URL cannot exceed 1000 characters")
         String contentUrl,
+
+        @Positive(message = "Duration must be a positive number of minutes")
+        Integer durationMinutes,
 
         @NotNull(message = "Lesson order sequence is required")
         @Positive(message = "Lesson order must be a positive integer")
