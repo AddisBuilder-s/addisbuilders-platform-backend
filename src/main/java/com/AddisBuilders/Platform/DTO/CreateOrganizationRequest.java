@@ -11,5 +11,9 @@ public record CreateOrganizationRequest(
 
         String description,
         String website,
-        String logoUrl
+        String logoUrl,
+        String industry,
+        String location,
+        String contactEmail,
+        String contactPhone
 ) {}
