@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * Controller handling student learning progress and completion tracking endpoints.
  */
 @RestController
-@RequestMapping("/progress")
+@RequestMapping
 @RequiredArgsConstructor
 public class ProgressController {
 
@@ -24,7 +24,8 @@ public class ProgressController {
     /**
      * Mark a lesson as completed. Restricted to STUDENT role.
      */
-    @PostMapping("/courses/{courseId}/lessons/{lessonId}/complete")
+    @PostMapping({"/progress/courses/{courseId}/lessons/{lessonId}/complete",
+            "/courses/{courseId}/lessons/{lessonId}/complete"})
     @PreAuthorize("hasRole('LEARNER')")
     public ResponseEntity<LessonCompletionResponse> markLessonComplete(
             @PathVariable Long courseId,
@@ -44,7 +45,7 @@ public class ProgressController {
     /**
      * Get course progress percentage for the authenticated student.
      */
-    @GetMapping("/courses/{courseId}")
+    @GetMapping({"/progress/courses/{courseId}", "/courses/{courseId}/progress"})
     @PreAuthorize("hasRole('LEARNER')")
     public ResponseEntity<CourseProgressResponse> getCourseProgress(
             @PathVariable Long courseId,
