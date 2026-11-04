@@ -24,6 +24,9 @@ public record CreateAssignmentRequest(
 
         @NotNull(message = "Max points is required")
         @Positive(message = "Max points must be greater than zero")
-        Integer maxPoints
+        Integer maxPoints,
+
+        @Size(max = 1000, message = "Attachment URL cannot exceed 1000 characters")
+        String attachmentUrl
 
 ) {}
