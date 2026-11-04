@@ -1,6 +1,7 @@
 package com.AddisBuilders.Platform.DTO;
 
 import com.AddisBuilders.Platform.Model.enums.WorkMode;
+import com.AddisBuilders.Platform.Model.enums.InternshipStatus;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,14 @@ public record CreateInternshipListingRequest(
 
         @NotNull(message = "Work mode is required")
         WorkMode workMode,
+
+        String location,
+        String category,
+        String responsibilities,
+        String eligibility,
+        String stipend,
+        @jakarta.validation.constraints.Positive Integer durationMonths,
+        InternshipStatus status,
 
         @NotNull(message = "Deadline is required")
         @Future(message = "Deadline must be in the future")
