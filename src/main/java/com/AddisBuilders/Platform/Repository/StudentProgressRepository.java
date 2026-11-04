@@ -18,4 +18,10 @@ public interface StudentProgressRepository extends JpaRepository<StudentProgress
 
     // Find all completed progress entries for a student
     List<StudentProgress> findByStudentId(Long studentId);
+
+    List<StudentProgress> findByStudentIdAndLessonIdIn(Long studentId, List<Long> lessonIds);
+
+    long countByCompletedTrue();
+
+    long countByStudentIdAndCompletedTrue(Long studentId);
 }
