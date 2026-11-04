@@ -36,6 +36,9 @@ public class Lesson {
     @Column(name = "content_url", length = 1000)
     private String contentUrl;
 
+    @Column(name = "duration_minutes")
+    private Integer durationMinutes;
+
     @Column(name = "lesson_order", nullable = false)
     private Integer lessonOrder;
 }

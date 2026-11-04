@@ -14,5 +14,6 @@ public record LessonResponse(
         ContentType type,
         String body,
         String contentUrl,
+        Integer durationMinutes,
         Integer lessonOrder
 ) {}
