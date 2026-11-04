@@ -79,21 +79,7 @@ public class AuthService {
         // 5. Generate JWT token for immediate login after registration
         String jwtToken = jwtUtils.generateToken(savedUser);
 
-        return AuthResponse.builder()
-                .id(savedUser.getId())
-                .token(jwtToken)
-                .email(savedUser.getEmail())
-                .fullName(savedUser.getFullName())
-                .role(savedUser.getRole())
-                .coordinatorStatus(savedUser.getCoordinatorStatus())
-                .mentorStatus(savedUser.getMentorStatus())
-                .university(savedUser.getUniversity())
-                .department(savedUser.getDepartment())
-                .employeeId(savedUser.getEmployeeId())
-                .proofDocumentUrl(savedUser.getProofDocumentUrl())
-                .createdAt(savedUser.getCreatedAt())
-                .isActive(savedUser.getStatus() == UserStatus.ACTIVE)
-                .build();
+        return toAuthResponse(savedUser, jwtToken);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -108,9 +94,26 @@ public class AuthService {
         // 3. Generate JWT token
         String jwtToken = jwtUtils.generateToken(user);
 
+        return toAuthResponse(user, jwtToken);
+    }
+
+    /**
+     * Returns the current profile in the same shape as login/register, without
+     * minting a new token.
+     */
+    @Transactional(readOnly = true)
+    public AuthResponse currentUser(User user) {
+        return toAuthResponse(user, null);
+    }
+
+    private AuthResponse toAuthResponse(User user, String token) {
+        Long organizationId = organizationRepository.findByOwnerId(user.getId())
+                .map(Organization::getId)
+                .orElse(null);
+
         return AuthResponse.builder()
                 .id(user.getId())
-                .token(jwtToken)
+                .token(token)
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole())
@@ -120,6 +123,12 @@ public class AuthService {
                 .department(user.getDepartment())
                 .employeeId(user.getEmployeeId())
                 .proofDocumentUrl(user.getProofDocumentUrl())
+                .phone(user.getPhone())
+                .bio(user.getBio())
+                .studentId(user.getStudentId())
+                .cvUrl(user.getCvUrl())
+                .avatarUrl(user.getAvatarUrl())
+                .organizationId(organizationId)
                 .createdAt(user.getCreatedAt())
                 .isActive(user.getStatus() == UserStatus.ACTIVE)
                 .build();
