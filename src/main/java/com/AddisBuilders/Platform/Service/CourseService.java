@@ -1,5 +1,7 @@
 package com.AddisBuilders.Platform.Service;
 
+import com.AddisBuilders.Platform.Exception.ResourceNotFoundException;
+
 import com.AddisBuilders.Platform.DTO.CourseResponse;
 import com.AddisBuilders.Platform.DTO.CreateCourseRequest;
 import com.AddisBuilders.Platform.DTO.UpdateCourseRequest;
@@ -27,6 +29,7 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final CourseCategoryRepository categoryRepository;
+    private final AuditLogService auditLog;
 
     /**
      * Creates a new course authored by the authenticated mentor.
@@ -37,21 +40,25 @@ public class CourseService {
         CourseCategory category = null;
         if (request.categoryId() != null) {
             category = categoryRepository.findById(request.categoryId())
-                    .orElseThrow(() -> new IllegalArgumentException("Category not found with ID: " + request.categoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + request.categoryId()));
         }
 
         // Build entity with default status DRAFT
         Course course = Course.builder()
                 .title(request.title())
                 .description(request.description())
-                .level(request.level())
+                .shortDescription(request.shortDescription())
+                .level(request.level() != null ? request.level() : CourseLevel.BEGINNER)
                 .status(CourseStatus.DRAFT)
                 .thumbnailUrl(request.thumbnailUrl())
+                .durationWeeks(request.durationWeeks())
+                .learningObjectives(request.learningObjectives())
                 .mentor(mentor)
                 .category(category)
                 .build();
 
         Course savedCourse = courseRepository.save(course);
+        auditLog.record(mentor, "COURSE_CREATED", "COURSE", savedCourse.getId(), savedCourse.getTitle(), null);
         return mapToResponse(savedCourse);
     }
 
@@ -61,12 +68,14 @@ public class CourseService {
      */
     @Transactional(readOnly = true)
     public List<CourseResponse> getAllCourses(User currentUser, String category, String level, String search) {
-        boolean canSeeDrafts = currentUser != null
-                && (currentUser.getRole() == UserRole.MENTOR || currentUser.getRole() == UserRole.SUPER_ADMIN);
-
-        List<Course> courses = canSeeDrafts
-                ? courseRepository.findAll()
-                : courseRepository.findByStatus(CourseStatus.PUBLISHED);
+        List<Course> courses;
+        if (currentUser != null && currentUser.getRole() == UserRole.SUPER_ADMIN) {
+            courses = courseRepository.findAll();
+        } else if (currentUser != null && currentUser.getRole() == UserRole.MENTOR) {
+            courses = courseRepository.findByMentorId(currentUser.getId());
+        } else {
+            courses = courseRepository.findByStatus(CourseStatus.PUBLISHED);
+        }
 
         CourseLevel levelFilter = parseLevel(level);
         String searchTerm = (search == null || search.isBlank())
@@ -121,7 +130,7 @@ public class CourseService {
     @Transactional(readOnly = true)
     public CourseResponse getCourseById(Long id, User currentUser) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + id));
 
         boolean isOwnerOrAdmin = currentUser != null
                 && (course.getMentor().getId().equals(currentUser.getId())
@@ -140,7 +149,7 @@ public class CourseService {
     @Transactional
     public CourseResponse publishCourse(Long id, User mentor) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + id));
 
         // Ensure only the course author or super admin can update the course status
         if (!course.getMentor().getId().equals(mentor.getId()) && mentor.getRole() != UserRole.SUPER_ADMIN) {
@@ -149,6 +158,7 @@ public class CourseService {
 
         course.setStatus(CourseStatus.PUBLISHED);
         Course updatedCourse = courseRepository.save(course);
+        auditLog.record(mentor, "COURSE_PUBLISHED", "COURSE", id, course.getTitle(), null);
         return mapToResponse(updatedCourse);
     }
     /**
@@ -157,13 +167,17 @@ public class CourseService {
     @Transactional
     public CourseResponse updateCourse(Long id, UpdateCourseRequest request, User mentor) {
         Course course = courseRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + id));
 
         if (!course.getMentor().getId().equals(mentor.getId()) && mentor.getRole() != UserRole.SUPER_ADMIN) {
             throw new AccessDeniedException("You do not own this course");
         }
 
-        if (request.title() != null) course.setTitle(request.title());
+        if (request.title() != null) {
+            String title = request.title().trim();
+            if (title.isEmpty()) throw new IllegalArgumentException("Course title cannot be blank");
+            course.setTitle(title);
+        }
         if (request.description() != null) course.setDescription(request.description());
         if (request.shortDescription() != null) course.setShortDescription(request.shortDescription());
         if (request.level() != null) course.setLevel(request.level());
@@ -173,11 +187,12 @@ public class CourseService {
         if (request.status() != null) course.setStatus(request.status());
         if (request.categoryId() != null) {
             CourseCategory category = categoryRepository.findById(request.categoryId())
-                    .orElseThrow(() -> new IllegalArgumentException("Category not found with ID: " + request.categoryId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + request.categoryId()));
             course.setCategory(category);
         }
 
         Course updatedCourse = courseRepository.save(course);
+        auditLog.record(mentor, "COURSE_UPDATED", "COURSE", id, "Course metadata updated", null);
         return mapToResponse(updatedCourse);
     }
     /**
@@ -195,10 +210,29 @@ public class CourseService {
                 .durationWeeks(course.getDurationWeeks())
                 .learningObjectives(course.getLearningObjectives())
                 .mentorId(course.getMentor().getId())
-                .instructorName(course.getMentor().getFullName()) // Populates instructorName so card displays properly!
+                .instructorName(course.getInstructorName()) // Derived from mentor.fullName
                 .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
                 .categoryName(course.getCategory() != null ? course.getCategory().getName() : null)
+                .materials(course.getMaterials().stream().map(CourseService::mapMaterial).toList())
                 .createdAt(course.getCreatedAt())
+                .build();
+    }
+
+    /**
+     * Public mapper shared with the material endpoints so course payloads and
+     * material payloads always stay in sync.
+     */
+    public static com.AddisBuilders.Platform.DTO.MaterialResponse mapMaterial(
+            com.AddisBuilders.Platform.Model.CourseMaterial material) {
+        return com.AddisBuilders.Platform.DTO.MaterialResponse.builder()
+                .id(material.getId())
+                .courseId(material.getCourse().getId())
+                .title(material.getTitle())
+                .description(material.getDescription())
+                .type(material.getType())
+                .url(material.getUrl())
+                .order(material.getSortOrder())
+                .createdAt(material.getCreatedAt())
                 .build();
     }
 }
