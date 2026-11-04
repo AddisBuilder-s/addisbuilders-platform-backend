@@ -1,5 +1,7 @@
 package com.AddisBuilders.Platform.Service;
 
+import com.AddisBuilders.Platform.Exception.ResourceNotFoundException;
+
 import com.AddisBuilders.Platform.DTO.CourseResponse;
 import com.AddisBuilders.Platform.DTO.EnrollmentResponse;
 import com.AddisBuilders.Platform.Model.Course;
@@ -30,7 +32,7 @@ public class EnrollmentService {
     @Transactional
     public CourseResponse enrollStudent(Long courseId, User student) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException("Course not found with ID: " + courseId));
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + courseId));
 
         if (course.getStatus() != CourseStatus.PUBLISHED) {
             throw new IllegalArgumentException("You can only enroll in published courses.");
@@ -76,7 +78,7 @@ public class EnrollmentService {
     @Transactional
     public EnrollmentResponse updateEnrollmentStatus(Long enrollmentId, EnrollmentStatus status, User currentUser) {
         Enrollment enrollment = enrollmentRepository.findById(enrollmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Enrollment record not found with ID: " + enrollmentId));
+                .orElseThrow(() -> new ResourceNotFoundException("Enrollment record not found with ID: " + enrollmentId));
 
         boolean ownsCourse = enrollment.getCourse().getMentor().getId().equals(currentUser.getId());
         if (!ownsCourse && currentUser.getRole() != UserRole.SUPER_ADMIN) {
@@ -94,6 +96,8 @@ public class EnrollmentService {
                 .studentId(e.getStudent().getId())
                 .studentName(e.getStudent().getFullName())
                 .studentEmail(e.getStudent().getEmail())
+                .studentUniversity(e.getStudent().getUniversity())
+                .studentDepartment(e.getStudent().getDepartment())
                 .courseId(e.getCourse().getId())
                 .courseTitle(e.getCourse().getTitle())
                 .instructorId(String.valueOf(e.getCourse().getMentor().getId()))
@@ -107,13 +111,17 @@ public class EnrollmentService {
                 .id(course.getId())
                 .title(course.getTitle())
                 .description(course.getDescription())
+                .shortDescription(course.getShortDescription())
                 .level(course.getLevel())
                 .status(course.getStatus())
                 .thumbnailUrl(course.getThumbnailUrl())
+                .durationWeeks(course.getDurationWeeks())
+                .learningObjectives(course.getLearningObjectives())
                 .mentorId(course.getMentor().getId())
                 .instructorName(course.getMentor().getFullName()) // Must match field name instructorName
                 .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
                 .categoryName(course.getCategory() != null ? course.getCategory().getName() : null)
+                .materials(course.getMaterials().stream().map(CourseService::mapMaterial).toList())
                 .createdAt(course.getCreatedAt())
                 .build();
     }

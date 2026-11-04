@@ -11,6 +11,7 @@ public record EnrollmentResponse(
         Long studentId,
         String studentName,
         String studentEmail,
+        String studentUniversity,
         String studentDepartment,
         Long courseId,
         String courseTitle,
