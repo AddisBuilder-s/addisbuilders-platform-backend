@@ -46,11 +46,18 @@ public class ProgressController {
      * Get course progress percentage for the authenticated student.
      */
     @GetMapping({"/progress/courses/{courseId}", "/courses/{courseId}/progress"})
-    @PreAuthorize("hasRole('LEARNER')")
+    @PreAuthorize("hasAnyRole('LEARNER', 'MENTOR')")
     public ResponseEntity<CourseProgressResponse> getCourseProgress(
             @PathVariable Long courseId,
+            @RequestParam(required = false) Long studentId,
             @AuthenticationPrincipal User currentUser
     ) {
-        return ResponseEntity.ok(progressService.getCourseProgress(courseId, currentUser));
+        // If a mentor passes a studentId, use it; otherwise default to the logged-in user
+        Long targetId = (studentId != null &&
+                (currentUser.getAuthorities().stream().anyMatch(a -> a.getAuthority().contains("MENTOR"))))
+                ? studentId
+                : currentUser.getId();
+
+        return ResponseEntity.ok(progressService.getCourseProgressForUser(courseId, targetId, currentUser));
     }
 }

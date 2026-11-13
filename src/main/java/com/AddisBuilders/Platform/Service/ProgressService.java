@@ -76,11 +76,25 @@ public class ProgressService {
      * Calculates the overall completion percentage of a course for a student.
      */
     @Transactional(readOnly = true)
-    public CourseProgressResponse getCourseProgress(Long courseId, User student) {
+    public CourseProgressResponse getCourseProgress(Long courseId, User currentUser) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + courseId));
 
-        requireEnrolled(student, courseId);
+        // Allow mentors who teach this course or admins to bypass student enrollment check
+        boolean isMentorOrAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MENTOR") ||
+                        a.getAuthority().equals("MENTOR") ||
+                        a.getAuthority().equals("ROLE_ADMIN") ||
+                        a.getAuthority().equals("ADMIN"));
+
+        // If not a mentor/admin, enforce student enrollment requirement
+        if (!isMentorOrAdmin) {
+            requireEnrolled(currentUser, courseId);
+        } else {
+            // Optional: verify if the mentor actually teaches this course if required by your business logic
+            boolean isCourseInstructor = course.getMentor().getId() != null && course.getMentor().getId().equals(currentUser.getId().toString());
+            // (Or skip instructor check if mentors can view all courses in the catalog)
+        }
 
         // Fetch all modules and their respective lesson IDs for this course
         List<Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
@@ -94,19 +108,64 @@ public class ProgressService {
             return new CourseProgressResponse(courseId, course.getTitle(), 0, 0, 0.0, List.of());
         }
 
-        List<Long> completedLessonIds = progressRepository.findByStudentIdAndLessonIdIn(student.getId(), allLessonIds).stream()
+        // If checking progress for a mentor view of a specific student, you might want to pass the student ID.
+        // If getting general course structure/progress, use currentUser.getId() or fetch target student progress.
+        List<Long> completedLessonIds = progressRepository.findByStudentIdAndLessonIdIn(currentUser.getId(), allLessonIds).stream()
                 .filter(progress -> Boolean.TRUE.equals(progress.getCompleted()))
                 .map(progress -> progress.getLesson().getId())
                 .toList();
+
         long completedLessons = completedLessonIds.size();
-        double percentage = ((double) completedLessons / totalLessons) * 100.0;
+        double percentage = totalLessons > 0 ? ((double) completedLessons / totalLessons) * 100.0 : 0.0;
 
         return CourseProgressResponse.builder()
                 .courseId(course.getId())
                 .courseTitle(course.getTitle())
                 .totalLessons(totalLessons)
                 .completedLessons(completedLessons)
-                .completionPercentage(Math.round(percentage * 100.0) / 100.0) // Round to 2 decimal places
+                .completionPercentage(Math.round(percentage * 100.0) / 100.0)
+                .completedLessonIds(completedLessonIds)
+                .build();
+    }
+    @Transactional(readOnly = true)
+    public CourseProgressResponse getCourseProgressForUser(Long courseId, Long targetUserId, User currentUser) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + courseId));
+
+        // Bypass enrollment check if mentor/admin
+        boolean isMentorOrAdmin = currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().contains("MENTOR") || a.getAuthority().contains("ADMIN"));
+
+        if (!isMentorOrAdmin) {
+            requireEnrolled(currentUser, courseId);
+        }
+
+        List<Module> modules = moduleRepository.findByCourseIdOrderByModuleOrderAsc(courseId);
+        List<Long> allLessonIds = modules.stream()
+                .flatMap(m -> lessonRepository.findByModuleIdOrderByLessonOrderAsc(m.getId()).stream())
+                .map(Lesson::getId)
+                .toList();
+
+        long totalLessons = allLessonIds.size();
+        if (totalLessons == 0) {
+            return new CourseProgressResponse(courseId, course.getTitle(), 0, 0, 0.0, List.of());
+        }
+
+        // Query progress for the target user (the student)
+        List<Long> completedLessonIds = progressRepository.findByStudentIdAndLessonIdIn(targetUserId, allLessonIds).stream()
+                .filter(progress -> Boolean.TRUE.equals(progress.getCompleted()))
+                .map(progress -> progress.getLesson().getId())
+                .toList();
+
+        long completedLessons = completedLessonIds.size();
+        double percentage = totalLessons > 0 ? ((double) completedLessons / totalLessons) * 100.0 : 0.0;
+
+        return CourseProgressResponse.builder()
+                .courseId(course.getId())
+                .courseTitle(course.getTitle())
+                .totalLessons(totalLessons)
+                .completedLessons(completedLessons)
+                .completionPercentage(Math.round(percentage * 100.0) / 100.0)
                 .completedLessonIds(completedLessonIds)
                 .build();
     }
