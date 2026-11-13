@@ -20,6 +20,7 @@ public record CourseResponse(
         String learningObjectives,
         Long mentorId,
         String instructorName, // Mapped to mentor.fullName so frontend card displays it correctly
+        String instructorAvatar, // Mapped to mentor.avatarUrl for course listing/detail cards
         Long categoryId,
         String categoryName,
         List<MaterialResponse> materials,

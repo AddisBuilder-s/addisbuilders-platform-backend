@@ -211,6 +211,7 @@ public class CourseService {
                 .learningObjectives(course.getLearningObjectives())
                 .mentorId(course.getMentor().getId())
                 .instructorName(course.getInstructorName()) // Derived from mentor.fullName
+                .instructorAvatar(course.getMentor() != null ? course.getMentor().getAvatarUrl() : null)
                 .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
                 .categoryName(course.getCategory() != null ? course.getCategory().getName() : null)
                 .materials(course.getMaterials().stream().map(CourseService::mapMaterial).toList())

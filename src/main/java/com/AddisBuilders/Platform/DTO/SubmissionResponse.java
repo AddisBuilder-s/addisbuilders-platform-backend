@@ -18,6 +18,7 @@ public record SubmissionResponse(
         String courseTitle,
         Long learnerId,
         String learnerName,
+        String learnerAvatarUrl,
         String learnerEmail,
         String textAnswer,
         String fileUrl,

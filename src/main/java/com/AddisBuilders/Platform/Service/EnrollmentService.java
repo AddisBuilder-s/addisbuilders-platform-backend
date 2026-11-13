@@ -95,6 +95,7 @@ public class EnrollmentService {
                 .id(e.getId())
                 .studentId(e.getStudent().getId())
                 .studentName(e.getStudent().getFullName())
+                .studentAvatarUrl(e.getStudent().getAvatarUrl())
                 .studentEmail(e.getStudent().getEmail())
                 .studentUniversity(e.getStudent().getUniversity())
                 .studentDepartment(e.getStudent().getDepartment())
@@ -119,6 +120,7 @@ public class EnrollmentService {
                 .learningObjectives(course.getLearningObjectives())
                 .mentorId(course.getMentor().getId())
                 .instructorName(course.getMentor().getFullName()) // Must match field name instructorName
+                .instructorAvatar(course.getMentor() != null ? course.getMentor().getAvatarUrl() : null)
                 .categoryId(course.getCategory() != null ? course.getCategory().getId() : null)
                 .categoryName(course.getCategory() != null ? course.getCategory().getName() : null)
                 .materials(course.getMaterials().stream().map(CourseService::mapMaterial).toList())

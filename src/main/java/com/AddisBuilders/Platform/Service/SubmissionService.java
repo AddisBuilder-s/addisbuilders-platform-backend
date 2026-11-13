@@ -159,6 +159,7 @@ public class SubmissionService {
                 .courseTitle(submission.getAssignment().getCourse().getTitle())
                 .learnerId(submission.getLearner().getId())
                 .learnerName(submission.getLearner().getFullName())
+                .learnerAvatarUrl(submission.getLearner().getAvatarUrl())
                 .learnerEmail(submission.getLearner().getEmail())
                 .textAnswer(submission.getTextAnswer())
                 .fileUrl(submission.getFileUrl())
